@@ -77,8 +77,8 @@ int main(int argc, char** argv){
   ObjectHandler object_handler;    
 
   // define movement goals
-  MoveGoal pickup = object_handler.define_goal(-1., -1.0);
-  MoveGoal dropoff = object_handler.define_goal(-3.0, 2.0);
+  MoveGoal pickup = object_handler.define_goal(-1.5, 0.0);
+  MoveGoal dropoff = object_handler.define_goal(-4.0, 3.0);
   
   // pickup object
   object_handler.handle_goal(pickup, move_base_client);
