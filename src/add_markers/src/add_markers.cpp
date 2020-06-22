@@ -93,7 +93,15 @@ void OdometryTrackingCallback(const nav_msgs::Odometry& odom)
   float odom_x = odom.pose.pose.position.x;
   float odom_y = odom.pose.pose.position.y;
 		 
-  // TODO: calculate goal states
+  float pickup_distance = sqrt(pow(pickup_x_ - odom_x, 2) + pow(pickup_y_ - odom_y, 2));
+  float dropoff_distance = sqrt(pow(dropoff_x_ - odom_x, 2) + pow(dropoff_y_ - odom_y, 2));
+
+  pickup_state_ = pickup_distance < kEpsilon;
+  dropoff_state_ = dropoff_distance < kEpsilon;
+	//if (pickup_distance < kEpsilon)
+	//	pickup_state_ = 1;
+	//else if (dropoff_distance < kEpsilon)
+	//	dropoff_state_ = 1;
 }
 
 
