@@ -2,19 +2,20 @@
 #include <visualization_msgs/Marker.h>
 #include <nav_msgs/Odometry.h>
 #include <math.h>
+#include <string>
 
 
 typedef visualization_msgs::Marker Marker;
 
-const float kEpsilon = 0.01;
+const float kEpsilon = 0.5;
 
-const float pickup_x_ = -1.0;
-const float pickup_y_ = -1.0;
-const float dropoff_x_ = -3.0;
-const float dropoff_y_ = 2.0;
+const float pickup_x_ = -1.5;
+const float pickup_y_ = 0.0;
+const float dropoff_x_ = -4.0;
+const float dropoff_y_ = 3.0;
 
-bool pickup_state_;
-bool dropoff_state_;
+bool pickup_state_ = false;
+bool dropoff_state_ = false;
 
 
 class MarkerManager
@@ -32,15 +33,23 @@ class MarkerManager
 
 void MarkerManager::update_marker()
 {
+    //ROS_INFO("***UPDATE MARKER***");
     if (!pickup_state_ && !dropoff_state_)
-      marker_.action = visualization_msgs::Marker::ADD;
+    {
+      marker_.action = Marker::ADD;
+      //ROS_INFO("ADD MARKER");
+    }
     if (pickup_state_ && !dropoff_state_)
-      marker_.action = visualization_msgs::Marker::DELETE;    
+    {
+      marker_.action = Marker::DELETE;    
+      ROS_INFO("DELETE MARKER");
+    }
     if (pickup_state_ && dropoff_state_)
     {
       marker_.pose.position.x = dropoff_x_;
       marker_.pose.position.y = dropoff_y_;
-      marker_.action = Marker::ADD;    
+      marker_.action = Marker::ADD; 
+      ROS_INFO("ELSE ADD MARKER");
     }
 
 }
@@ -83,9 +92,8 @@ void MarkerManager::init_marker(uint32_t shape)
     marker_.color.a = 1.0;
 
     marker_.lifetime = ros::Duration();
+    ROS_INFO("MARKER INITIALIZED");
 	
-    pickup_state_ = 0;
-    dropoff_state_ = 0;
 }
 
 void OdometryTrackingCallback(const nav_msgs::Odometry& odom)
@@ -95,13 +103,23 @@ void OdometryTrackingCallback(const nav_msgs::Odometry& odom)
 		 
   float pickup_distance = sqrt(pow(pickup_x_ - odom_x, 2) + pow(pickup_y_ - odom_y, 2));
   float dropoff_distance = sqrt(pow(dropoff_x_ - odom_x, 2) + pow(dropoff_y_ - odom_y, 2));
-
-  pickup_state_ = pickup_distance < kEpsilon;
-  dropoff_state_ = dropoff_distance < kEpsilon;
-	//if (pickup_distance < kEpsilon)
-	//	pickup_state_ = 1;
-	//else if (dropoff_distance < kEpsilon)
-	//	dropoff_state_ = 1;
+  ROS_INFO("**********************PICKUP_DISTANCE:");
+  std::string msg1 = std::to_string(pickup_distance);
+  ROS_INFO_STREAM(msg1);
+  ROS_INFO("**********************DROPOFF_DISTANCE");
+  std::string msg2 = std::to_string(dropoff_distance);
+  ROS_INFO_STREAM(msg2);
+  
+  if (pickup_distance < kEpsilon) 
+  {
+    pickup_state_ = true;
+    ROS_INFO("************************PICKUP STATE TRUE");
+  }
+  else if (dropoff_distance < kEpsilon)
+  {
+    dropoff_state_ = true;
+    ROS_INFO("************************DROPOFF STATE TRUE");
+  }
 }
 
 
@@ -119,20 +137,10 @@ int main( int argc, char** argv )
   
   while (ros::ok())
   {
-		// Publish the marker
-    /*while (marker_pub_.getNumSubscribers() < 1)
-    {
-      if (!ros::ok())
-      {
-        return 0;
-      }
-      ROS_WARN_ONCE("Please create a subscriber to the marker");
-      sleep(1);
-    }*/
     marker_manager.update_marker();
     marker_pub_.publish(marker_manager.marker_);
 	
-	// Handle ROS communication events
+    // Handle ROS communication events
     ros::spinOnce();
       
   }
